@@ -6,6 +6,7 @@ import PrivateRoute from './components/PrivateRoute'; // We'll create this later
 import 'bootstrap/dist/css/bootstrap.min.css';
 import AddBookPage from './pages/AddBookPage';
 import EditBookPage from './pages/EditBookPage';
+import RegisterPage from './pages/RegisterPage';
 
 
 function App() {
@@ -28,7 +29,8 @@ function App() {
             <AddBookPage />
           </PrivateRoute>
         } />
-        <Route path="*" element={<LoginPage />} />
+
+        <Route path="*" element={<RegisterPage />} />
       </Routes>
     </Router>
   );

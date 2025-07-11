@@ -3,10 +3,11 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
 
-const LoginPage = () => {
+const RegisterPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
 
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -14,18 +15,21 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setMessage('');
+
     try {
-      const res = await axios.post('http://localhost:5074/api/auth/login', formData);
-      localStorage.setItem('token', res.data.token); // Save JWT
-      navigate('/books'); // Redirect
+      await axios.post('http://localhost:5074/api/auth/register', formData);
+      setMessage('Registration successful! Redirecting to login...');
+      setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
-      setError('Invalid credentials. Please try again.');
+      setError(err.response?.data || 'Registration failed. Please try again.');
     }
   };
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh' }}>
-      {/* Blurred Background Image */}
+      {/* Blurred background image */}
       <div
         style={{
           position: 'absolute',
@@ -42,7 +46,7 @@ const LoginPage = () => {
         }}
       />
 
-      {/* Foreground Content */}
+      {/* Foreground container */}
       <Container
         fluid
         style={{
@@ -61,7 +65,8 @@ const LoginPage = () => {
           }}
           className="shadow-sm p-4"
         >
-          <h2 className="text-center mb-4">Login</h2>
+          <h2 className="text-center mb-4">Register</h2>
+          {message && <Alert variant="success">{message}</Alert>}
           {error && <Alert variant="danger">{error}</Alert>}
           <Form onSubmit={handleSubmit}>
             <Form.Group controlId="formUsername" className="mb-3">
@@ -89,13 +94,13 @@ const LoginPage = () => {
             </Form.Group>
 
             <Button variant="primary" type="submit" className="w-100">
-              Login
+              Register
             </Button>
           </Form>
           <div className="text-center mt-3">
-            <span>Register an account? </span>
-            <Button variant="link" onClick={() => navigate('/register')}>
-              Register
+            <span>Already have an account? </span>
+            <Button variant="link" onClick={() => navigate('/login')}>
+              Login
             </Button>
           </div>
         </Card>
@@ -104,4 +109,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;
