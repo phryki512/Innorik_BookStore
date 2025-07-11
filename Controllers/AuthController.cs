@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using BookStoreAPI.Services;
 using System.Text.Json.Serialization;
+using BookStoreAPI.Data;
 
 public class LoginRequest
 {
@@ -14,28 +15,49 @@ public class LoginRequest
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
-{
+{   
+    private readonly BookStoreDbContext _context;
     private readonly TokenService _tokenService;
+    private readonly PasswordHasher _hasher;
 
-    public AuthController(TokenService tokenService)
+    public AuthController(TokenService tokenService,BookStoreDbContext context,PasswordHasher hasher)
     {
         _tokenService = tokenService;
+        _context = context;
+        _hasher = hasher;
     }
 
     [HttpPost("login")]
     public IActionResult Login([FromBody] LoginRequest request)
     {
-        Console.WriteLine($"Attempted login with Username: {request.Username}, Password: {request.Password}");
-
-        if (request.Username == "admin" && request.Password == "password")
-        {
-            var token = _tokenService.CreateToken(request.Username);
-            return Ok(new { token });
-        }
-
-        return Unauthorized("Invalid credentials");
+    var user = _context.Users.SingleOrDefault(u => u.Username == request.Username);
+    if (user == null || !_hasher.Verify(request.Password, user.Password))
+    {
+        return Unauthorized();
     }
-    [HttpGet("ping")]
-    public IActionResult Ping() => Ok("AuthController is working");
+
+    var token = _tokenService.CreateToken(user.Username);
+    return Ok(new { Token = token });
+    }
+
+    //[HttpGet("ping")]
+    //public IActionResult Ping() => Ok("AuthController is working");
+
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] LoginRequest request)
+    {
+    if (_context.Users.Any(u => u.Username == request.Username))
+        return BadRequest("User already exists.");
+
+    var user = new User
+    {
+        Username = request.Username,
+        Password = _hasher.Hash(request.Password)
+    };
+
+    _context.Users.Add(user);
+    await _context.SaveChangesAsync();
+    return Ok("User registered successfully.");
+}
 
 }

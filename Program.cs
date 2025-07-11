@@ -6,6 +6,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using BookStoreAPI.Services;
 using Microsoft.AspNetCore.Mvc;
+using BookStoreAPI.Repositories;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,9 +49,13 @@ builder.Services.AddCors(options =>
         .AllowAnyHeader()
         .AllowAnyMethod());
 });
+builder.Services.AddScoped<PasswordHasher>();
+builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IBookService, BookService>();
+
 
 var app = builder.Build();
-app.UseCors("AllowFrontend");
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -65,6 +71,7 @@ using (var scope = app.Services.CreateScope())
     SeedData.Initialize(dbContext); // seed data
 }
 
+app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 app.UseAuthentication(); 
 app.UseAuthorization();
